@@ -68,7 +68,7 @@ void AIPlayer::think(color & c_piece, int & id_piece, int & dice) const{
 
     double valor; // Almacena el valor con el que se etiqueta el estado tras el proceso de busqueda.
     double alpha = menosinf, beta = masinf; // Cotas iniciales de la poda AlfaBeta
-    
+        
     /*// Llamada a la función para la poda (los parámetros son solo una sugerencia, se pueden modificar).
     valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, ValoracionTest);
     cout << "Valor MiniMax: " << valor << "  Accion: " << str(c_piece) << " " << id_piece << " " << dice << endl;*/
@@ -95,7 +95,7 @@ double AIPlayer::Poda_AlfaBeta(const Parchis &actual, int jugador, int profundid
     if(profundidad == profundidad_max or actual.gameOver()){ 
         return heuristic(actual,jugador);                                                                                
     }
-
+    
     ParchisBros parchisBros(actual);
     double valor;
 
@@ -110,9 +110,11 @@ double AIPlayer::Poda_AlfaBeta(const Parchis &actual, int jugador, int profundid
             if (valor > alpha) {
                 alpha = valor;
                 // Actualizar los parámetros de la mejor acción
-                c_piece = it.getMovedColor();
-                id_piece = it.getMovedPieceId();
-                dice = it.getMovedDiceValue();
+                if(profundidad==0){
+                    c_piece = it.getMovedColor();
+                    id_piece = it.getMovedPieceId();
+                    dice = it.getMovedDiceValue();
+                }
             }
 
             if (alpha >= beta) {
@@ -127,13 +129,8 @@ double AIPlayer::Poda_AlfaBeta(const Parchis &actual, int jugador, int profundid
 
             valor = Poda_AlfaBeta(hijo, jugador, profundidad + 1, profundidad_max, c_piece, id_piece, dice, alpha, beta, heuristic);
 
-            if (valor < beta) {
-                beta = valor;
-
-                // Actualizar los parámetros de la mejor acción
-                c_piece = it.getMovedColor();
-                id_piece = it.getMovedPieceId();
-                dice = it.getMovedDiceValue();
+            if(valor < beta ){
+                beta = valor;//Ya que queremos coger el valor MINIMO de cada nodo. No hace falta guardar el movimiento ya que es el MAX el que tiene profundidad = 0.
             }
 
             if (alpha >= beta) {
