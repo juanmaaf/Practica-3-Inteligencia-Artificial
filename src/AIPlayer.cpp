@@ -34,7 +34,7 @@ void AIPlayer::think(color & c_piece, int & id_piece, int & dice) const{
     // - valor del dado con el que se va a mover la ficha.
 
     // El id de mi jugador actual.
-    int player = actual->getCurrentPlayerId();
+    /*int player = actual->getCurrentPlayerId();
 
     // Vector que almacenará los dados que se pueden usar para el movimiento
     vector<int> current_dices;
@@ -62,8 +62,8 @@ void AIPlayer::think(color & c_piece, int & id_piece, int & dice) const{
         id_piece = SKIP_TURN;
         c_piece = actual->getCurrentColor(); // Le tengo que indicar mi color actual al pasar turno.
     }
-
-    /*
+    */
+    
     // El siguiente código se proporciona como sugerencia para iniciar la implementación del agente.
 
     double valor; // Almacena el valor con el que se etiqueta el estado tras el proceso de busqueda.
@@ -80,17 +80,69 @@ void AIPlayer::think(color & c_piece, int & id_piece, int & dice) const{
             valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, ValoracionTest);
             break;
         case 1:
-            valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, MiValoracion1);
+            valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, MiHeuristica1);
             break;
-        case 2:
+        /*case 2:
             valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, MiValoracion2);
-            break;
+            break;*/
     }
     cout << "Valor MiniMax: " << valor << "  Accion: " << str(c_piece) << " " << id_piece << " " << dice << endl;
-
-    */
 }
 
+double AIPlayer::Poda_AlfaBeta(const Parchis &actual, int jugador, int profundidad, int profundidad_max, color &c_piece, int &id_piece, int &dice, double alpha, double beta, double (*heuristic)(const Parchis &, int)) const {
+    
+    if(profundidad == profundidad_max or actual.gameOver()){ 
+        return heuristic(actual,jugador);                                                                                
+    }
+
+    ParchisBros parchisBros(actual);
+    double valor;
+
+    //Calculamos el PODA ALFA-BETA
+    if(jugador == actual.getCurrentPlayerId() ){ // es decir es un nodo MAX ya que los nodos MAX son pares.
+
+        for(ParchisBros::Iterator it = parchisBros.begin(); it != parchisBros.end(); ++it){
+            const Parchis& hijo = *it;
+
+            valor = Poda_AlfaBeta(hijo, jugador, profundidad + 1, profundidad_max, c_piece, id_piece, dice, alpha, beta, heuristic);
+
+            if (valor > alpha) {
+                alpha = valor;
+                // Actualizar los parámetros de la mejor acción
+                c_piece = it.getMovedColor();
+                id_piece = it.getMovedPieceId();
+                dice = it.getMovedDiceValue();
+            }
+
+            if (alpha >= beta) {
+                break; // Poda alfa
+            }
+        }
+        return alpha;
+    }else{ // es un nodo MIN
+
+        for(ParchisBros::Iterator it = parchisBros.begin(); it != parchisBros.end(); ++it){
+            const Parchis& hijo = *it;
+
+            valor = Poda_AlfaBeta(hijo, jugador, profundidad + 1, profundidad_max, c_piece, id_piece, dice, alpha, beta, heuristic);
+
+            if (valor < beta) {
+                beta = valor;
+
+                // Actualizar los parámetros de la mejor acción
+                c_piece = it.getMovedColor();
+                id_piece = it.getMovedPieceId();
+                dice = it.getMovedDiceValue();
+            }
+
+            if (alpha >= beta) {
+                break; // Poda beta
+            }
+        }
+        return beta;
+    }
+    
+}
 
 
 double AIPlayer::ValoracionTest(const Parchis &estado, int jugador)
@@ -163,3 +215,72 @@ double AIPlayer::ValoracionTest(const Parchis &estado, int jugador)
     }
 }
 
+double AIPlayer::MiHeuristica1(const Parchis &estado, int jugador)
+{
+    // Heurística de prueba proporcionada para validar el funcionamiento del algoritmo de búsqueda.
+
+
+    int ganador = estado.getWinner();
+    int oponente = (jugador+1) % 2;
+
+    // Si hay un ganador, devuelvo más/menos infinito, según si he ganado yo o el oponente.
+    if (ganador == jugador)
+    {
+        return gana;
+    }
+    else if (ganador == oponente)
+    {
+        return pierde;
+    }
+    else
+    {
+        // Colores que juega mi jugador y colores del oponente
+        vector<color> my_colors = estado.getPlayerColors(jugador);
+        vector<color> op_colors = estado.getPlayerColors(oponente);
+
+        // Recorro todas las fichas de mi jugador
+        int puntuacion_jugador = 0;
+        // Recorro colores de mi jugador.
+        for (int i = 0; i < my_colors.size(); i++)
+        {
+            color c = my_colors[i];
+            // Recorro las fichas de ese color.
+            for (int j = 0; j < num_pieces; j++)
+            {
+                // Valoro positivamente que la ficha esté en casilla segura o meta.
+                if (estado.isSafePiece(c, j))
+                {
+                    puntuacion_jugador++;
+                }
+                else if (estado.getBoard().getPiece(c, j).get_box().type == goal)
+                {
+                    puntuacion_jugador += 5;
+                }
+            }
+        }
+
+        // Recorro todas las fichas del oponente
+        int puntuacion_oponente = 0;
+        // Recorro colores del oponente.
+        for (int i = 0; i < op_colors.size(); i++)
+        {
+            color c = op_colors[i];
+            // Recorro las fichas de ese color.
+            for (int j = 0; j < num_pieces; j++)
+            {
+                if (estado.isSafePiece(c, j))
+                {
+                    // Valoro negativamente que la ficha esté en casilla segura o meta.
+                    puntuacion_oponente++;
+                }
+                else if (estado.getBoard().getPiece(c, j).get_box().type == goal)
+                {
+                    puntuacion_oponente += 5;
+                }
+            }
+        }
+
+        // Devuelvo la puntuación de mi jugador menos la puntuación del oponente.
+        return puntuacion_jugador - puntuacion_oponente;
+    }
+}
