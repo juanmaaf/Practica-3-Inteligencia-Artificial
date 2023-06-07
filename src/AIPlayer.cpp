@@ -68,9 +68,10 @@ void AIPlayer::think(color & c_piece, int & id_piece, int & dice) const{
 
     double valor; // Almacena el valor con el que se etiqueta el estado tras el proceso de busqueda.
     double alpha = menosinf, beta = masinf; // Cotas iniciales de la poda AlfaBeta
-    // Llamada a la función para la poda (los parámetros son solo una sugerencia, se pueden modificar).
+    
+    /*// Llamada a la función para la poda (los parámetros son solo una sugerencia, se pueden modificar).
     valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, ValoracionTest);
-    cout << "Valor MiniMax: " << valor << "  Accion: " << str(c_piece) << " " << id_piece << " " << dice << endl;
+    cout << "Valor MiniMax: " << valor << "  Accion: " << str(c_piece) << " " << id_piece << " " << dice << endl;*/
 
     // ----------------------------------------------------------------- //
 
@@ -79,10 +80,10 @@ void AIPlayer::think(color & c_piece, int & id_piece, int & dice) const{
         case 0:
             valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, ValoracionTest);
             break;
-        case 1:
+        /*case 1:
             valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, MiHeuristica1);
             break;
-        /*case 2:
+        case 2:
             valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, MiValoracion2);
             break;*/
     }
@@ -141,9 +142,7 @@ double AIPlayer::Poda_AlfaBeta(const Parchis &actual, int jugador, int profundid
         }
         return beta;
     }
-    
 }
-
 
 double AIPlayer::ValoracionTest(const Parchis &estado, int jugador)
 {
