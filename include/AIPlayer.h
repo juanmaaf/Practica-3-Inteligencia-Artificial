@@ -77,6 +77,6 @@ class AIPlayer: public Player{
          */
         double Poda_AlfaBeta(const Parchis &actual, int jugador, int profundidad, int profundidad_max, color &c_piece, int &id_piece, int &dice, double alpha, double beta, double (*heuristic)(const Parchis &, int)) const;
         
-        static double MiHeuristica1(const Parchis &estado, int jugador);
+        static double MiHeuristica(const Parchis &estado, int jugador);
 };
 #endif

@@ -69,9 +69,10 @@ void AIPlayer::think(color & c_piece, int & id_piece, int & dice) const{
     double valor; // Almacena el valor con el que se etiqueta el estado tras el proceso de busqueda.
     double alpha = menosinf, beta = masinf; // Cotas iniciales de la poda AlfaBeta
         
-    /*// Llamada a la función para la poda (los parámetros son solo una sugerencia, se pueden modificar).
-    valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, ValoracionTest);
-    cout << "Valor MiniMax: " << valor << "  Accion: " << str(c_piece) << " " << id_piece << " " << dice << endl;*/
+    // Llamada a la función para la poda (los parámetros son solo una sugerencia, se pueden modificar).
+    //valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, MiHeuristica2);
+
+    /*cout << "Valor MiniMax: " << valor << "  Accion: " << str(c_piece) << " " << id_piece << " " << dice << endl;*/
 
     // ----------------------------------------------------------------- //
 
@@ -80,13 +81,14 @@ void AIPlayer::think(color & c_piece, int & id_piece, int & dice) const{
         case 0:
             valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, ValoracionTest);
             break;
-        /*case 1:
-            valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, MiHeuristica1);
+        case 1:
+            valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, MiHeuristica);
             break;
-        case 2:
-            valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, MiValoracion2);
+        /*case 2:
+            valor = Poda_AlfaBeta(*actual, jugador, 0, PROFUNDIDAD_ALFABETA, c_piece, id_piece, dice, alpha, beta, MiHeuristica2);
             break;*/
     }
+    
     cout << "Valor MiniMax: " << valor << "  Accion: " << str(c_piece) << " " << id_piece << " " << dice << endl;
 }
 
@@ -211,7 +213,7 @@ double AIPlayer::ValoracionTest(const Parchis &estado, int jugador)
     }
 }
 
-double AIPlayer::MiHeuristica1(const Parchis &estado, int jugador)
+double AIPlayer::MiHeuristica(const Parchis &estado, int jugador)
 {
     // Heurística de prueba proporcionada para validar el funcionamiento del algoritmo de búsqueda.
 
@@ -252,7 +254,23 @@ double AIPlayer::MiHeuristica1(const Parchis &estado, int jugador)
                 {
                     puntuacion_jugador += 5;
                 }
+                else if (estado.getBoard().getPiece(c, j).get_box().type == home)
+                {
+                    puntuacion_jugador -= 5;
+                }
+
+                puntuacion_jugador += 100 - estado.distanceToGoal(c,j);
             }
+
+            if(estado.isEatingMove() and estado.getCurrentPlayerId() == jugador){
+                if(estado.eatenPiece().first == my_colors[(i+1)%2]){
+                    puntuacion_jugador += 10;
+                }else{
+                    puntuacion_jugador += 15;
+                }
+            }
+
+            if(estado.isSpecialDice())
         }
 
         // Recorro todas las fichas del oponente
@@ -272,6 +290,20 @@ double AIPlayer::MiHeuristica1(const Parchis &estado, int jugador)
                 else if (estado.getBoard().getPiece(c, j).get_box().type == goal)
                 {
                     puntuacion_oponente += 5;
+                }
+                else if (estado.getBoard().getPiece(c, j).get_box().type == home)
+                {
+                    puntuacion_oponente -= 5;
+                }
+
+                puntuacion_oponente += 100 - estado.distanceToGoal(c,j);
+            }
+
+            if(estado.isEatingMove() and estado.getCurrentPlayerId() == oponente){
+                if(estado.eatenPiece().first == op_colors[(i+1)%2]){
+                    puntuacion_oponente += 10;
+                }else{
+                    puntuacion_oponente += 15;
                 }
             }
         }
